@@ -1,4 +1,4 @@
-import { Button, Card, message, Space, Typography } from 'antd'
+import { Button, Card, Flex, message, Space, Steps, Typography } from 'antd'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Question } from '../../modules/models/Question'
 import { isEmpty, isEqual } from '../../utils/helpers'
@@ -97,14 +97,24 @@ export const Questionnaire: React.FC<QuestionnaireProps> = ({ questions: _questi
   return (
     <Card
       title={
-        <Space>
+        <Flex align="center" justify="space-between">
           <Button type="text" onClick={handleBack}>
             Back
           </Button>
+          <Steps
+            type="inline"
+            current={step}
+            items={[
+              ...(questions?.map((_, index) => ({ title: index + 1, style: { flex: 1 } })) || []),
+              { title: 'End', style: { flex: 1 } }
+            ]}
+            onChange={setStep}
+            style={{ flex: 1 }}
+          />
           <Button type="text" onClick={handleNext}>
             Next
           </Button>
-        </Space>
+        </Flex>
       }
       {...props}>
       {step > questions?.length - 1 ? (
