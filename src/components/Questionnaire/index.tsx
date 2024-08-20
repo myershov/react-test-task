@@ -15,6 +15,7 @@ export const Questionnaire: React.FC<QuestionnaireProps> = ({ questions: _questi
   const [questions, setQuestions] = useState<Question[]>(_questions)
   const [answers, setAnswers] = useState<Record<number, any>>({})
   const [timeSpent, setTimeSpent] = useState<Record<number, number>>({})
+  const [isFinished, setIsFinished] = useState<boolean>(false)
 
   const handleNext = useCallback(() => {
     setStep(Math.min(step + 1, questions?.length))
@@ -70,14 +71,26 @@ export const Questionnaire: React.FC<QuestionnaireProps> = ({ questions: _questi
   useEffect(() => {
     const currentQuestion = questions[step]
 
-    const intervalId = setInterval(
-      () =>
-        !!currentQuestion &&
-        setTimeSpent({ ...timeSpent, [currentQuestion.id]: !isNaN(timeSpent[currentQuestion.id]) ? timeSpent[currentQuestion.id] + 1 : 1 }),
-      1000
-    )
-    return () => clearInterval(intervalId)
-  }, [step, questions, timeSpent])
+    if (currentQuestion) {
+      const startTime = performance.now()
+
+      return () => {
+        setTimeSpent((prevTimeSpent) => ({
+          ...prevTimeSpent,
+          [currentQuestion.id]: (prevTimeSpent[currentQuestion.id] || 0) + Math.round(performance.now() - startTime)
+        }))
+      }
+    }
+  }, [step, questions])
+
+  useEffect(() => {
+    if (Object.values(answers || {}).length < questions?.length && step >= questions?.length) {
+      setIsFinished(false)
+      message.error('Not all answers received X_X')
+    } else {
+      setIsFinished(true)
+    }
+  }, [step, questions, answers])
 
   const totalTimeSpent = useMemo<number>(() => Object.values(timeSpent).reduce((acc, time) => acc + time, 0), [timeSpent])
 
@@ -95,7 +108,11 @@ export const Questionnaire: React.FC<QuestionnaireProps> = ({ questions: _questi
       }
       {...props}>
       {step > questions?.length - 1 ? (
-        `Questionnaire finished in ${totalTimeSpent}s`
+        isFinished ? (
+          `Questionnaire finished in ${totalTimeSpent}ms`
+        ) : (
+          'Questionnaire not finished yet'
+        )
       ) : (
         <QuestionComponent
           question={questions[step]}
