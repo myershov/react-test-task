@@ -11,7 +11,17 @@
         {
           "id": 2,
           "question": "Are you currently pregnant",
-          "type": "single-variant"
+          "type": "single-variant",
+          "options": [
+            {
+              "label": "Yes",
+              "value": true
+            },
+            {
+              "label": "No",
+              "value": false
+            }
+          ]
         }
       ]
     }
