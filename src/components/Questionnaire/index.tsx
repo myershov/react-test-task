@@ -1,5 +1,5 @@
 import { Button, Card, message, Space } from 'antd'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Question } from '../../modules/models/Question'
 import { isEmpty, isEqual } from '../../utils/helpers'
 import { Answer, Question as QuestionComponent } from '../Question'
@@ -14,6 +14,7 @@ export const Questionnaire: React.FC<QuestionnaireProps> = ({ questions: _questi
   const [step, setStep] = useState<number>(0)
   const [questions, setQuestions] = useState<Question[]>(_questions)
   const [answers, setAnswers] = useState<Record<number, any>>({})
+  const [timeSpent, setTimeSpent] = useState<Record<number, number>>({})
 
   const handleNext = useCallback(() => {
     setStep(Math.min(step + 1, questions?.length))
@@ -66,6 +67,20 @@ export const Questionnaire: React.FC<QuestionnaireProps> = ({ questions: _questi
     }
   }, [_questions, answers])
 
+  useEffect(() => {
+    const currentQuestion = questions[step]
+
+    const intervalId = setInterval(
+      () =>
+        !!currentQuestion &&
+        setTimeSpent({ ...timeSpent, [currentQuestion.id]: !isNaN(timeSpent[currentQuestion.id]) ? timeSpent[currentQuestion.id] + 1 : 1 }),
+      1000
+    )
+    return () => clearInterval(intervalId)
+  }, [step, questions, timeSpent])
+
+  const totalTimeSpent = useMemo<number>(() => Object.values(timeSpent).reduce((acc, time) => acc + time, 0), [timeSpent])
+
   return (
     <Card
       title={
@@ -80,7 +95,7 @@ export const Questionnaire: React.FC<QuestionnaireProps> = ({ questions: _questi
       }
       {...props}>
       {step > questions?.length - 1 ? (
-        'Questionnaire finished in TODO: time-track'
+        `Questionnaire finished in ${totalTimeSpent}s`
       ) : (
         <QuestionComponent
           question={questions[step]}
