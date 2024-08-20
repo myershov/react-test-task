@@ -2,6 +2,7 @@ import { Button, Flex, Input, Radio, Space, Typography } from 'antd'
 import { useCallback, useState } from 'react'
 import { QuestionType } from '../../modules/lib/constants'
 import type { Question as QuestionT, SingleVariantQuestion } from '../../modules/models/Question'
+import { isEqual } from '../../utils/helpers'
 
 export type Answer = {
   questionId?: number
@@ -10,6 +11,7 @@ export type Answer = {
 
 export interface QuestionProps<T = QuestionT> {
   question?: T
+  answer?: Answer['data']
   onAnswer?: (answer?: Answer, item?: T) => void
   className?: string
   style?: React.CSSProperties
@@ -47,21 +49,21 @@ export const Question: React.FC<QuestionProps> = ({ question, onAnswer, classNam
   )
 }
 
-const SexQuestion: React.FC<Omit<QuestionProps, 'type'>> = ({ question, onAnswer }) => {
+const SexQuestion: React.FC<Omit<QuestionProps, 'type'>> = ({ question, answer, onAnswer }) => {
   return (
     <Flex gap={8}>
-      <Button type="primary" onClick={() => onAnswer?.({ questionId: question?.id, data: 'male' })}>
+      <Button type={answer === 'male' ? 'primary' : 'default'} onClick={() => onAnswer?.({ questionId: question?.id, data: 'male' })}>
         Male
       </Button>
-      <Button type="primary" onClick={() => onAnswer?.({ questionId: question?.id, data: 'female' })}>
+      <Button type={answer === 'female' ? 'primary' : 'default'} onClick={() => onAnswer?.({ questionId: question?.id, data: 'female' })}>
         Female
       </Button>
     </Flex>
   )
 }
 
-const CustomQuestion: React.FC<Omit<QuestionProps, 'type'>> = ({ question, onAnswer }) => {
-  const [value, setValue] = useState<string>('')
+const CustomQuestion: React.FC<Omit<QuestionProps, 'type'>> = ({ question, answer, onAnswer }) => {
+  const [value, setValue] = useState<string>(answer)
 
   return (
     <Space direction="vertical">
@@ -73,13 +75,16 @@ const CustomQuestion: React.FC<Omit<QuestionProps, 'type'>> = ({ question, onAns
   )
 }
 
-const SingleQuestion: React.FC<Omit<QuestionProps<SingleVariantQuestion>, 'type'>> = ({ question, onAnswer }) => {
+const SingleQuestion: React.FC<Omit<QuestionProps<SingleVariantQuestion>, 'type'>> = ({ question, answer, onAnswer }) => {
   return (
     <Space direction="vertical">
       {question?.options.map((option) => (
-        <Radio.Button key={option.value} onClick={() => onAnswer?.({ questionId: question.id, data: option.value })}>
+        <Radio
+          key={option.value}
+          checked={isEqual(answer, option.value)}
+          onClick={() => onAnswer?.({ questionId: question.id, data: option.value })}>
           {option.label}
-        </Radio.Button>
+        </Radio>
       ))}
     </Space>
   )

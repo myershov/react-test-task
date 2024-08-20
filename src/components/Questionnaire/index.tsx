@@ -1,7 +1,7 @@
 import { Button, Card, message, Space } from 'antd'
 import { useCallback, useEffect, useState } from 'react'
 import type { Question } from '../../modules/models/Question'
-import { isEmpty } from '../../utils/helpers'
+import { isEmpty, isEqual } from '../../utils/helpers'
 import { Answer, Question as QuestionComponent } from '../Question'
 
 export interface QuestionnaireProps {
@@ -12,7 +12,6 @@ export interface QuestionnaireProps {
 
 export const Questionnaire: React.FC<QuestionnaireProps> = ({ questions: _questions = [], ...props }) => {
   const [step, setStep] = useState<number>(0)
-  const [currentQuestion, setCurrentQuestion] = useState<Question>()
   const [questions, setQuestions] = useState<Question[]>(_questions)
   const [answers, setAnswers] = useState<Record<number, any>>({})
 
@@ -38,16 +37,11 @@ export const Questionnaire: React.FC<QuestionnaireProps> = ({ questions: _questi
   )
 
   useEffect(() => {
-    setCurrentQuestion(questions[step])
-  }, [step, questions])
-
-  useEffect(() => {
     const unwrap = (question: Question): Omit<Question, 'conditionalBlocks'>[] => {
       let result: Question[] = [question]
 
       if (question.conditionalBlocks) {
         const providedAnswer = answers[question.id]
-
         if (providedAnswer) {
           const conditionalQuestions = question.conditionalBlocks[providedAnswer]
           if (conditionalQuestions) {
@@ -61,7 +55,15 @@ export const Questionnaire: React.FC<QuestionnaireProps> = ({ questions: _questi
       return result
     }
 
-    setQuestions(_questions?.map((question) => unwrap(question)).flat())
+    const newQuestions = _questions?.map((question) => unwrap(question)).flat()
+    setQuestions(newQuestions)
+
+    const newAnswers = Object.fromEntries(
+      Object.entries(answers).filter(([questionId]) => newQuestions.some((question) => question.id === Number(questionId)))
+    )
+    if (!isEqual(newAnswers, answers)) {
+      setAnswers(newAnswers)
+    }
   }, [_questions, answers])
 
   return (
@@ -77,11 +79,12 @@ export const Questionnaire: React.FC<QuestionnaireProps> = ({ questions: _questi
         </Space>
       }
       {...props}>
-      {questions?.length <= Object.keys(answers || {}).length && !currentQuestion ? (
+      {step > questions?.length - 1 ? (
         'Questionnaire finished in TODO: time-track'
       ) : (
         <QuestionComponent
-          question={currentQuestion}
+          question={questions[step]}
+          answer={answers[questions[step]?.id]}
           onAnswer={(answer) => {
             handleAnswer(answer)
             handleNext()
