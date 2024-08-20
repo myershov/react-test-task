@@ -1,4 +1,4 @@
-import { Button, Card, message, Space } from 'antd'
+import { Button, Card, message, Space, Typography } from 'antd'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Question } from '../../modules/models/Question'
 import { isEmpty, isEqual } from '../../utils/helpers'
@@ -109,7 +109,15 @@ export const Questionnaire: React.FC<QuestionnaireProps> = ({ questions: _questi
       {...props}>
       {step > questions?.length - 1 ? (
         isFinished ? (
-          `Questionnaire finished in ${totalTimeSpent}ms`
+          <Space direction="vertical">
+            <Typography.Text strong>Questionnaire finished in {totalTimeSpent}ms</Typography.Text>
+            <div>
+              <pre>answers: {JSON.stringify(answers, null, 2)}</pre>
+            </div>
+            <div>
+              <pre>timeSpent: {JSON.stringify(timeSpent, null, 2)}</pre>
+            </div>
+          </Space>
         ) : (
           'Questionnaire not finished yet'
         )
