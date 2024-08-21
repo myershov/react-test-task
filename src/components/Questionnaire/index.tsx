@@ -95,8 +95,6 @@ export const Questionnaire: React.FC<QuestionnaireProps> = ({ questions: _questi
 
   const totalTimeSpent = useMemo<number>(() => Object.values(timeSpent).reduce((acc, time) => acc + time, 0), [timeSpent])
 
-  console.log(JSON.stringify(answers, null, 2))
-
   return (
     <Card
       title={
