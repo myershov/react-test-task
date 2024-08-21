@@ -62,3 +62,7 @@ export const isEqual = (a: any, b: any): boolean => {
 
   return false
 }
+
+export const toTitleCase = (text: string) => {
+  return text ? text[0].toUpperCase() + text.slice(1) : ''
+}

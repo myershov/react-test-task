@@ -3,3 +3,8 @@ export enum QuestionType {
   SINGLE = 'single-variant',
   CUSTOM = 'custom-input'
 }
+
+export enum Sex {
+  MALE = 'male',
+  FEMALE = 'female'
+}

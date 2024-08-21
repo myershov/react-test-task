@@ -32,10 +32,20 @@ export const Questionnaire: React.FC<QuestionnaireProps> = ({ questions: _questi
         return
       }
 
-      setAnswers({ ...answers, [answer!.questionId!]: answer!.data })
+      const newAnswers = { ...answers, [answer!.questionId!]: answer!.data }
+      setAnswers(newAnswers)
       message.success('Answer saved!')
+
+      const newIsFinished = Object.values(newAnswers).length === questions?.length
+      setIsFinished(newIsFinished)
+
+      if (step + 1 === questions?.length && !newIsFinished) {
+        message.error('Questionnaire not finished')
+      } else {
+        handleNext()
+      }
     },
-    [answers]
+    [step, questions?.length, answers, handleNext]
   )
 
   useEffect(() => {
@@ -83,24 +93,19 @@ export const Questionnaire: React.FC<QuestionnaireProps> = ({ questions: _questi
     }
   }, [step, questions])
 
-  useEffect(() => {
-    if (Object.values(answers || {}).length < questions?.length && step >= questions?.length) {
-      setIsFinished(false)
-      message.error('Not all answers received X_X')
-    } else {
-      setIsFinished(true)
-    }
-  }, [step, questions, answers])
-
   const totalTimeSpent = useMemo<number>(() => Object.values(timeSpent).reduce((acc, time) => acc + time, 0), [timeSpent])
+
+  console.log(JSON.stringify(answers, null, 2))
 
   return (
     <Card
       title={
         <Flex align="center" justify="space-between">
-          <Button type="text" onClick={handleBack}>
-            Back
-          </Button>
+          {step !== 0 && (
+            <Button type="text" onClick={handleBack}>
+              Back
+            </Button>
+          )}
           <Steps
             type="inline"
             current={step}
@@ -111,35 +116,32 @@ export const Questionnaire: React.FC<QuestionnaireProps> = ({ questions: _questi
             onChange={setStep}
             style={{ flex: 1 }}
           />
-          <Button type="text" onClick={handleNext}>
-            Next
-          </Button>
+          {step < questions?.length && (
+            <Button type="text" disabled={step === questions?.length - 1 && !isFinished} onClick={handleNext}>
+              Next
+            </Button>
+          )}
         </Flex>
       }
       {...props}>
       {step > questions?.length - 1 ? (
         isFinished ? (
-          <Space direction="vertical">
-            <Typography.Text strong>Questionnaire finished in {totalTimeSpent}ms</Typography.Text>
-            <div>
-              <pre>answers: {JSON.stringify(answers, null, 2)}</pre>
-            </div>
-            <div>
-              <pre>timeSpent: {JSON.stringify(timeSpent, null, 2)}</pre>
-            </div>
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <Typography.Text strong>Questionnaire finished in {totalTimeSpent} ms</Typography.Text>
+            <Flex wrap gap={8}>
+              <Typography.Paragraph style={{ flex: 1 }}>
+                <pre style={{ margin: 0 }}>answers: {JSON.stringify(answers, null, 2)}</pre>
+              </Typography.Paragraph>
+              <Typography.Paragraph style={{ flex: 1 }}>
+                <pre style={{ margin: 0 }}>timeSpent: {JSON.stringify(timeSpent, null, 2)}</pre>
+              </Typography.Paragraph>
+            </Flex>
           </Space>
         ) : (
-          'Questionnaire not finished yet'
+          'Questionnaire not finished'
         )
       ) : (
-        <QuestionComponent
-          question={questions[step]}
-          answer={answers[questions[step]?.id]}
-          onAnswer={(answer) => {
-            handleAnswer(answer)
-            handleNext()
-          }}
-        />
+        <QuestionComponent question={questions[step]} answer={answers[questions[step]?.id]} onAnswer={handleAnswer} />
       )}
     </Card>
   )
